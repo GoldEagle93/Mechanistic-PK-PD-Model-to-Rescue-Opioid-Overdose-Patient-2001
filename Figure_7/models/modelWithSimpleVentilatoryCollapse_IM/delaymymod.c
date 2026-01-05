@@ -3,7 +3,7 @@
 #include <Rdefines.h>
 #include <R_ext/Rdynload.h>
 #include <time.h>
-static double parms[106];
+static double parms[111];
 #define F parms[0]
 #define kin parms[1]
 #define kout parms[2]
@@ -110,6 +110,10 @@ static double parms[106];
 #define V2 parms[103]
 #define timeout parms[104]
 #define starttime parms[105]
+#define mechvent_flag parms[106]
+#define target_Pe_co2 parms[107]
+#define base_Venti parms[108]
+#define kp_Venti parms[109]
 double CA_o2_happen=0;
 double CA_co2_happen=0;
 // assisting function 
@@ -212,7 +216,7 @@ void lagvalue(double T, int *nr, int N, double *yout) {
 }
 
 void initmod(void (* odeparms)(int *, double *)){
-	int N=106;
+	int N=110;
 	odeparms(&N, parms);}
 
 void derivs (int *neq, double *t, double *y, double *ydot, double *yout, int *ip){
@@ -551,6 +555,14 @@ void derivs (int *neq, double *t, double *y, double *ydot, double *yout, int *ip
 	}
 	if(Venti< 0)
 		Venti=0;
+
+	if (mechvent_flag > 0.5) {
+    double current_Pe_co2 = y[11];
+    double error = current_Pe_co2 - target_Pe_co2;
+    double controlled_Venti = base_Venti + kp_Venti * error;
+    
+    Venti = controlled_Venti;  // Override physiological calculation
+	}
 
 	double nSaturation=2.6;
 	double k3=26.6; //mm Hg

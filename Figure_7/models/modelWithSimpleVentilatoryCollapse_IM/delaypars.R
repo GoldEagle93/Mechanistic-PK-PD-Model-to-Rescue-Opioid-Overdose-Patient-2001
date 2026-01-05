@@ -74,3 +74,7 @@ k12N=45.2,
 k21N=45.2,
 V2=108900,
 timeout=600,starttime=30)
+pars["mechvent_flag"] <- 0
+pars["target_Pe_co2"] <- 50
+pars["base_Venti"] <- 5.0
+pars["kp_Venti"] <- 1.0

@@ -76,6 +76,10 @@ parser<-add_option(parser, c("-c", "--conc"), default ="2.965",type="numeric",he
 parser<-add_option(parser, c("-i", "--patientid"), default ="2001",type="numeric",help="patient id")
 parser<-add_option(parser, c("-a", "--formulation"), default = "EVZIO",type="character",help="Type of Naloxone IM formulation: either EVZIO or Generic")
 
+parser <- add_option(parser, c("--sleep"), default="no", type="character", help="Set to 'yes' for sleep/unconscious scenario (no wakefulness drive)")
+parser <- add_option(parser, c("--highgas"), default="no", type="character", help="Set to 'yes' for high inspired CO2 (7%) and O2 (50%)")
+parser <- add_option(parser, c("--mechvent"), default="no", type="character", help="Set to 'yes' for mechanical ventilation with disabled body control (approximates fixed high expired CO2)")
+
 args<-parse_args(parser)
 patientTypeStr<-gsub(" ","",args$patientType)
 patientType<-strsplit(patientTypeStr,",")[[1]]
@@ -102,6 +106,9 @@ consider_PK_dis=args$disK
 
 formulation=args$formulation
 
+sleep_mode <- args$sleep
+highgas_mode <- args$highgas
+mechvent_mode <- args$mechvent
 
 print("-----Produce supplemental figures?-----")
 if(args$patientid==2001){
@@ -110,7 +117,9 @@ if(args$patientid==2001){
 print(Plot_yn)
 
 
-populationFolder=sprintf("outputs/Review_naloxone_formulation_%s_conc_%s_ligand_%s_patient_%s",formulation,concstr,opioid,patientType)
+# populationFolder=sprintf("outputs/Review_naloxone_formulation_%s_conc_%s_ligand_%s_patient_%s",formulation,concstr,opioid,patientType)
+populationFolder <- sprintf("outputs/Review_naloxone_formulation_%s_conc_%s_ligand_%s_patient_%s_sleep%s_highgas%s_mechvent%s",
+                            formulation, concstr, opioid, patientType, sleep_mode, highgas_mode, mechvent_mode)
 
 system(paste0("mkdir -p ",populationFolder))	
 #===============================================================================================================================================
@@ -192,6 +201,31 @@ if(patientType=="naive"){
 }
 
 allpatients<-as.data.frame(t(allpatients))
+
+if (sleep_mode == "yes") {
+  allpatients["W"] <- 0
+  allpatients["Wmax"] <- 0
+  print("Sleep mode: Wakefulness drive disabled (W = Wmax = 0)") #*#
+}
+
+if (highgas_mode == "yes") {
+  states["P_I_o2"] <- 356.5
+  allpatients["P_I_co2"] <- 50
+  print("High inspired gas mode: P_I_o2 = 356.5 mmHg, P_I_co2 = 50 mmHg") #*#
+}
+
+if (mechvent_mode == "yes") {
+  allpatients["W"] <- 0
+  allpatients["Wmax"] <- 0
+  allpatients["offDp"] <- 0
+  allpatients["offDc"] <- 0
+  allpatients["mechvent_flag"] <- 1
+  allpatients["target_Pe_co2"] <- 50
+  allpatients["base_Venti"] <- 5.0
+  allpatients["kp_Venti"] <- 1.0
+  print("Mechanical ventilation approximation: All body ventilatory drives disabled (wakefulness + chemoreflex off)") #*#
+}
+
 allpatients_2001<-allpatients #--- patient 2001 provides the 
 #=========================================================================================================
 #printing===============================================================
@@ -299,8 +333,13 @@ if (consider_delay_dist=="yes") {
 	pp<-patientWrapper(doseidx=opioid_doseidx,patientidx=patientidx,delay=delay,threshold=threshold)
 
 	
-	
-		plotFolder=sprintf("outputs/results/Im_plot_%s/",formulation)
+		scenario_suffix <- ""
+		if (args$sleep == "yes") scenario_suffix <- "_sleepyes"
+		if (args$highgas == "yes") scenario_suffix <- "_highgasyes"
+		if (args$mechvent == "yes") scenario_suffix <- "_mechventyes"
+
+		plotFolder <- sprintf("outputs/results/Im_plot_%s%s/", formulation, scenario_suffix)
+		# plotFolder=sprintf("outputs/results/Im_plot_%s/",formulation)
 		system(paste0("mkdir -p ",plotFolder))		
 		
 		#Generate physiological responses for optimal patient (patientidx=2001)
@@ -311,15 +350,22 @@ if (consider_delay_dist=="yes") {
 							"Brain O2 partial pressure (mm Hg)",
 							"Antagonist plasma concentration (ng/ml)",
 							"Blood flow to brain (l/min)")]
-			ypred2=pp[[1]][[2]][,c("time","Minute ventilation (l/min)",
-							"Arterial O2 partial pressure (mm Hg)","Total blood flow (l/min)",
-							"Arterial CO2 partial pressure (mm Hg)",
-							"Brain O2 partial pressure (mm Hg)",
-							"Antagonist plasma concentration (ng/ml)",
-							"Blood flow to brain (l/min)")]
-			write.csv(ypred1,sprintf("%s/%s_%s_ypred1.csv",plotFolder,opioid,concstr))
-			write.csv(ypred2,sprintf("%s/%s_%s_ypred2.csv",plotFolder,opioid,concstr))
-			
+			if(length(pp[[1]]) >= 2){
+			ypred2 = pp[[1]][[2]][,c("time","Minute ventilation (l/min)",
+									"Arterial O2 partial pressure (mm Hg)","Total blood flow (l/min)",
+									"Arterial CO2 partial pressure (mm Hg)",
+									"Brain O2 partial pressure (mm Hg)",
+									"Antagonist plasma concentration (ng/ml)",
+									"Blood flow to brain (l/min)")]
+			print("Naloxone administered - full with-naloxone simulation available")
+		} else {
+			ypred2 = ypred1  # Duplicate no-naloxone as placeholder (naloxone not needed/triggered)
+			ypred2[,"Antagonist plasma concentration (ng/ml)"] <- 0  # Ensure naloxone conc = 0
+			print("Naloxone NOT administered - using no-naloxone data for ypred2")
+		}
+
+		write.csv(ypred1, sprintf("%s/%s_%s_ypred1.csv", plotFolder, opioid, concstr))
+		write.csv(ypred2, sprintf("%s/%s_%s_ypred2.csv", plotFolder, opioid, concstr))
 		}
 		
 		

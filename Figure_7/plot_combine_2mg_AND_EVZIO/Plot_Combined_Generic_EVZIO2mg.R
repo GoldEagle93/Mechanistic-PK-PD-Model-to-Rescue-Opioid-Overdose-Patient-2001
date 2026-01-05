@@ -13,6 +13,15 @@ system(paste0("mkdir -p ","results"))
 
 mainfol2="../outputs/results"
 
+# Add these to customize per scenario run
+# scenario_suffix <- ""
+scenario_suffix <- "_sleepyes"
+# scenario_suffix <- "_highgasyes"
+# scenario_suffix <- "_mechventyes"
+generic_subfolder <- sprintf("Im_plot_Generic%s", scenario_suffix)  # If your outputs use this pattern
+evzio_subfolder <- sprintf("Im_plot_EVZIO%s", scenario_suffix)
+
+
 
 #----- Dose conditions of interest
 alllfolders<-c(
@@ -38,18 +47,23 @@ for (fo in alllfolders) {
 	i=i+1
 	print("2mg")
 	# data2mg=read.csv(sprintf("%s/All_CADo1PKReview_naloxone_formulation_Generic_conc_%s.csv",mainfol,fo)) # CA Population Data
-	Generic_1d=read.csv(sprintf("%s/Im_plot_Generic/%s_ypred1.csv",mainfol2,dose[i])) # Optimal Patient Physiology data No naloxone
-	Generic_2d=read.csv(sprintf("%s/Im_plot_Generic/%s_ypred2.csv",mainfol2,dose[i])) # Optimal Patient Physiology data	One dose naloxone	
+	# Generic_1d=read.csv(sprintf("%s/Im_plot_Generic/%s_ypred1.csv",mainfol2,dose[i])) # Optimal Patient Physiology data No naloxone
+	# Generic_2d=read.csv(sprintf("%s/Im_plot_Generic/%s_ypred2.csv",mainfol2,dose[i])) # Optimal Patient Physiology data	One dose naloxone	
 	
 	# data2mg$Ndose=c("No naloxone", "2mg/2ml")
 	
+	Generic_1d <- read.csv(sprintf("%s/%s/%s_ypred1.csv", mainfol2, generic_subfolder, dose[i]))
+	Generic_2d <- read.csv(sprintf("%s/%s/%s_ypred2.csv", mainfol2, generic_subfolder, dose[i]))
 	
 	print("EVZIO")
 	
 	# dataEvzio2mg=read.csv(sprintf("%s/All_CADo1PKReview_naloxone_formulation_EVZIO_conc_%s.csv",mainfol,fo)) # CA Population Data
-	EVZIO_1d=read.csv(sprintf("%s/Im_plot_EVZIO/%s_ypred1.csv",mainfol2,dose[i])) #Optimal Patient Physiology data No naloxone
-	EVZIO_2d=read.csv(sprintf("%s/Im_plot_EVZIO/%s_ypred2.csv",mainfol2,dose[i])) #Optimal Patient Physiology data One dose naloxone
+	# EVZIO_1d=read.csv(sprintf("%s/Im_plot_EVZIO/%s_ypred1.csv",mainfol2,dose[i])) #Optimal Patient Physiology data No naloxone
+	# EVZIO_2d=read.csv(sprintf("%s/Im_plot_EVZIO/%s_ypred2.csv",mainfol2,dose[i])) #Optimal Patient Physiology data One dose naloxone
 	# dataEvzio2mg$Ndose=c("No naloxone", "2mg/0.4ml")
+	
+	EVZIO_1d   <- read.csv(sprintf("%s/%s/%s_ypred1.csv", mainfol2, evzio_subfolder, dose[i]))
+	EVZIO_2d   <- read.csv(sprintf("%s/%s/%s_ypred2.csv", mainfol2, evzio_subfolder, dose[i]))
 	
 	names(Generic_1d)<-c("x","time","Vent","O2","Blood","PaCO2","PBO2","PlasmaN","CBF") 
 	names(Generic_2d)<-names(Generic_1d)
@@ -388,7 +402,8 @@ p33<-	p3[[3]]+ylab("")+ggtitle("")+theme(plot.title = element_text(size = 10))+ 
 	patchall2<-p21+a+p22+a+p23+a+p24+a+
 			p31+a+p32+a+p33+a+p34+a+
 			p41+a+p42+a+p43+a+p44+a+plot_layout(ncol=4) #plot_annotation(tag_levels = 'A')
-	ggsave("results/Manuscript_Figure_7A.pdf",patchall2)
+	# ggsave("results/Manuscript_Figure_7A.pdf",patchall2)
+	ggsave(sprintf("results/Manuscript_Figure_7A_%s.pdf", scenario_suffix), patchall2, width=12, height=9)
 	
 
 	
