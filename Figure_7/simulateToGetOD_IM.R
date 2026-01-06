@@ -36,7 +36,8 @@ namesyout<-c("Minute ventilation (l/min)","Residual wakefulness drive (l/min)","
 		"Opioid effect site concentration (pM)","Antagonist effect site concentration (nM)",
 		"Opioid bound receptor fraction","Antagonist bound receptor fraction","Total blood flow (l/min)",
 		"Elimination Rate (1/s)","K12","K13","K21","K31","Fentanyl VoD",
-		"Arterial oxygen saturation (%)", "Naloxone VoD")
+		"Arterial oxygen saturation (%)", "Naloxone VoD",
+		"Expired CO2 partial pressure (mm Hg)")
 #===========================================================================================================
 #load required packages==================
 library(deSolve)
@@ -349,14 +350,16 @@ if (consider_delay_dist=="yes") {
 							"Arterial CO2 partial pressure (mm Hg)",
 							"Brain O2 partial pressure (mm Hg)",
 							"Antagonist plasma concentration (ng/ml)",
-							"Blood flow to brain (l/min)")]
+							"Blood flow to brain (l/min)",
+							"Expired CO2 partial pressure (mm Hg)")]
 			if(length(pp[[1]]) >= 2){
 			ypred2 = pp[[1]][[2]][,c("time","Minute ventilation (l/min)",
 									"Arterial O2 partial pressure (mm Hg)","Total blood flow (l/min)",
 									"Arterial CO2 partial pressure (mm Hg)",
 									"Brain O2 partial pressure (mm Hg)",
 									"Antagonist plasma concentration (ng/ml)",
-									"Blood flow to brain (l/min)")]
+									"Blood flow to brain (l/min)",
+									"Expired CO2 partial pressure (mm Hg)")]
 			print("Naloxone administered - full with-naloxone simulation available")
 		} else {
 			ypred2 = ypred1  # Duplicate no-naloxone as placeholder (naloxone not needed/triggered)

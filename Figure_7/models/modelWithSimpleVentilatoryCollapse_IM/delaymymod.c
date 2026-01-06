@@ -668,6 +668,7 @@ void derivs (int *neq, double *t, double *y, double *ydot, double *yout, int *ip
 	yout[21]=VPC;
 	yout[22]=arterialOxygenSaturation;
 	yout[23]=V1C;
+	yout[24]=y[11];
 	//	yout[22]=C_a_o2;
 	//	yout[23]=y[12];
 	//	yout[24]=C_V_o2;
